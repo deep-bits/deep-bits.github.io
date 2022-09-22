@@ -1,39 +1,29 @@
 library(shiny)
 ui <- fluidPage(
-  titlePanel("Upload files to identify outliers"),
+  titlePanel("Outlier detection from CSV file"),
   sidebarLayout(
     sidebarPanel(
       fileInput("data_file", "Choose a valid CSV File",
-                multiple = FALSE,
-                accept = c("text/csv",
-                           "text/comma-separated-values,text/plain",
-                           ".csv")),
+        multiple = FALSE,
+        accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
       checkboxInput("header", "Header", TRUE),
-      radioButtons("sep", "Separator",
-                   choices = c(Comma = ",",
-                               Semicolon = ";",
-                               Tab = "\t"),
-                   selected = ",")
+      textInput("coln", "Enter column no. in which outliers are to detected", "1")
     ),
     mainPanel(
-      plotOutput("distPlot")
+      plotOutput("boxplot")
     )
   )
 )
 server <- function(input, output) {
-  output$distPlot <- renderPlot({
+  output$boxplot <- renderPlot({
     req(input$data_file)
     tryCatch(
       {
-        df <- read.csv(input$data_file$datapath,
-                       header = input$header,
-                       sep = input$sep,
-                       quote = input$quote)
-        boxplot(df[,2])
+        dat_frm <- read.csv(input$data_file$datapath, header = input$header)
+        col_num <- as.numeric(input$coln)
+        boxplot(dat_frm[,col_num])
       },
-      error = function(e) {
-        stop(safeError(e))
-      }
+      error = function(e) { stop(safeError(e)) }
     )
   })
 }
